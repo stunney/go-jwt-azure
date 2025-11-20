@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault"
-	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault/keyvaultapi"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/Azure/azure-sdk-for-go/services/keyvault/v21/keyvault"
+	"github.com/Azure/azure-sdk-for-go/services/keyvault/v21/keyvault/keyvaultapi"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Key represents a remote key in the Azure Key Vault.

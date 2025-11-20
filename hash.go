@@ -4,7 +4,7 @@ import (
 	"crypto"
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // HashAlgorithms maps JWK signing algorithms to their corresponding hash algorithms.
