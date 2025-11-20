@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/keyvault/v21/keyvault"
-	"github.com/Azure/azure-sdk-for-go/services/keyvault/v21/keyvault/keyvaultapi"
+	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault"
+	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault/keyvaultapi"
 	"github.com/golang-jwt/jwt/v5"
 )
 
