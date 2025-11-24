@@ -3,41 +3,41 @@ package azure
 import (
 	"encoding/base64"
 
-	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 // Specific instances of SigningMethod for a certain algorithms.
 var (
-	SigningMethodES256  = &SigningMethod{algorithm: keyvault.ES256}
-	SigningMethodES256K = &SigningMethod{algorithm: keyvault.ES256K}
-	SigningMethodES384  = &SigningMethod{algorithm: keyvault.ES384}
-	SigningMethodES512  = &SigningMethod{algorithm: keyvault.ES512}
-	SigningMethodPS256  = &SigningMethod{algorithm: keyvault.PS256}
-	SigningMethodPS384  = &SigningMethod{algorithm: keyvault.PS384}
-	SigningMethodPS512  = &SigningMethod{algorithm: keyvault.PS512}
-	SigningMethodRS256  = &SigningMethod{algorithm: keyvault.RS256}
-	SigningMethodRS384  = &SigningMethod{algorithm: keyvault.RS384}
-	SigningMethodRS512  = &SigningMethod{algorithm: keyvault.RS512}
+	SigningMethodES256  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmES256}
+	SigningMethodES256K = &SigningMethod{algorithm: azkeys.SignatureAlgorithmES256K}
+	SigningMethodES384  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmES384}
+	SigningMethodES512  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmES512}
+	SigningMethodPS256  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmPS256}
+	SigningMethodPS384  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmPS384}
+	SigningMethodPS512  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmPS512}
+	SigningMethodRS256  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmRS256}
+	SigningMethodRS384  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmRS384}
+	SigningMethodRS512  = &SigningMethod{algorithm: azkeys.SignatureAlgorithmRS512}
 )
 
 // SigningMethods maps JWK signing algorithms to their corresponding implementation.
-var SigningMethods = map[keyvault.JSONWebKeySignatureAlgorithm]*SigningMethod{
-	keyvault.ES256:  SigningMethodES256,
-	keyvault.ES256K: SigningMethodES256K,
-	keyvault.ES384:  SigningMethodES384,
-	keyvault.ES512:  SigningMethodES512,
-	keyvault.PS256:  SigningMethodPS256,
-	keyvault.PS384:  SigningMethodPS384,
-	keyvault.PS512:  SigningMethodPS512,
-	keyvault.RS256:  SigningMethodRS256,
-	keyvault.RS384:  SigningMethodRS384,
-	keyvault.RS512:  SigningMethodRS512,
+var SigningMethods = map[azkeys.SignatureAlgorithm]*SigningMethod{
+	azkeys.SignatureAlgorithmES256:  SigningMethodES256,
+	azkeys.SignatureAlgorithmES256K: SigningMethodES256K,
+	azkeys.SignatureAlgorithmES384:  SigningMethodES384,
+	azkeys.SignatureAlgorithmES512:  SigningMethodES512,
+	azkeys.SignatureAlgorithmPS256:  SigningMethodPS256,
+	azkeys.SignatureAlgorithmPS384:  SigningMethodPS384,
+	azkeys.SignatureAlgorithmPS512:  SigningMethodPS512,
+	azkeys.SignatureAlgorithmRS256:  SigningMethodRS256,
+	azkeys.SignatureAlgorithmRS384:  SigningMethodRS384,
+	azkeys.SignatureAlgorithmRS512:  SigningMethodRS512,
 }
 
 // SigningMethod for Azure Key Vault.
 type SigningMethod struct {
-	algorithm keyvault.JSONWebKeySignatureAlgorithm
+	algorithm azkeys.SignatureAlgorithm
 }
 
 // Alg identifies the signing / verification algorithm.
