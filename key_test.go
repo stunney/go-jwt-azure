@@ -83,7 +83,10 @@ func test_init() {
 
 func getKeyVersion(t *testing.T, keyName string) string {
 	t.Helper()
-	pager := keysClient.NewListKeyPropertiesVersionsPager(keyName, nil)
+
+	props := azkeys.ListKeyPropertiesVersionsOptions{}
+
+	pager := keysClient.NewListKeyPropertiesVersionsPager(keyName, &props)
 	if pager.More() {
 		page, err := pager.NextPage(context.Background())
 		if err != nil {
@@ -233,8 +236,8 @@ func testCreateKeyAndSignAndVerifyWithIt(t *testing.T, name, keyname_base string
 		}
 	}()
 
-	keyVersion := getKeyVersion(t, response.Key.KID.Name())
-	keyID := fmt.Sprintf("%s/keys/%s/%s", keyVaultURL, response.Key.KID.Name(), keyVersion)
+	//keyVersion := getKeyVersion(t, response.Key.KID.Name())
+	keyID := fmt.Sprintf("%s/keys/%s/%s", keyVaultURL, response.Key.KID.Name(), "")
 	key, err := NewKey(*keysClient, keyID)
 	if err != nil {
 		t.Fatalf("Failed to create key: %v", err)

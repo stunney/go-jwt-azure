@@ -36,11 +36,17 @@ func NewKeyWithContext(ctx context.Context, client azkeys.Client, keyID string) 
 	}
 
 	parts := strings.Split(strings.TrimPrefix(keyURL.Path, "//"), "/")
-	if len(parts) != 3 {
+	if len(parts) < 2 || len(parts) > 3 {
 		return nil, jwt.ErrInvalidKey
 	}
 	if parts[0] != "keys" {
 		return nil, jwt.ErrInvalidKey
+	}
+
+	version := ""
+
+	if len(parts) == 3 {
+		version = parts[2]
 	}
 
 	return &Key{
@@ -49,7 +55,7 @@ func NewKeyWithContext(ctx context.Context, client azkeys.Client, keyID string) 
 		id:           keyID,
 		vaultBaseURL: keyURL.Scheme + "://" + keyURL.Host,
 		name:         parts[1],
-		version:      parts[2],
+		version:      version,
 	}, nil
 }
 
