@@ -2,6 +2,11 @@ package azure
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"errors"
+	"fmt"
+	"math/big"
 	"net/url"
 	"strings"
 
@@ -21,6 +26,7 @@ type Key struct {
 	vaultBaseURL string
 	name         string
 	version      string
+	publicKey    *ecdsa.PublicKey
 }
 
 // NewKey create a remote key referenced by a key identifier.
@@ -30,6 +36,8 @@ func NewKey(client azkeys.Client, keyID string) (*Key, error) {
 
 // NewKeyWithContext create a remote key referenced by a key identifier with context.
 func NewKeyWithContext(ctx context.Context, client azkeys.Client, keyID string) (*Key, error) {
+	init_signing_methods() //Register the signing methods
+
 	keyURL, err := url.Parse(keyID)
 	if err != nil {
 		return nil, jwt.ErrInvalidKey
@@ -49,13 +57,62 @@ func NewKeyWithContext(ctx context.Context, client azkeys.Client, keyID string) 
 		version = parts[2]
 	}
 
-	return &Key{
+	ret := &Key{
 		Client:       &client,
 		Context:      ctx,
 		id:           keyID,
 		vaultBaseURL: keyURL.Scheme + "://" + keyURL.Host,
 		name:         parts[1],
 		version:      version,
+	}
+
+	return ret, nil
+}
+
+func (k *Key) PublicKey() (*ecdsa.PublicKey, error) {
+	if k.publicKey != nil {
+		return k.publicKey, nil
+	}
+
+	ctx := context.Background()
+	getResp, err := k.Client.GetKey(ctx, k.name, k.version, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pubKey, err := k.extractPublicKey(getResp.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	k.publicKey = pubKey
+	return k.publicKey, nil
+}
+
+func (k *Key) extractPublicKey(key *azkeys.JSONWebKey) (*ecdsa.PublicKey, error) {
+	if key.Kty == nil || *key.Kty != azkeys.KeyTypeEC {
+		return nil, errors.New("key is not an EC key")
+	}
+
+	var curve elliptic.Curve
+	switch *key.Crv {
+	case azkeys.CurveNameP256:
+		curve = elliptic.P256()
+	case azkeys.CurveNameP384:
+		curve = elliptic.P384()
+	case azkeys.CurveNameP521:
+		curve = elliptic.P521()
+	default:
+		return nil, fmt.Errorf("unsupported curve: %v", *key.Crv)
+	}
+
+	x := new(big.Int).SetBytes(key.X)
+	y := new(big.Int).SetBytes(key.Y)
+
+	return &ecdsa.PublicKey{
+		Curve: curve,
+		X:     x,
+		Y:     y,
 	}, nil
 }
 

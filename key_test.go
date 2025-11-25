@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -263,6 +264,101 @@ func testCreateKeyAndSignAndVerifyWithIt(t *testing.T, name, keyname_base string
 	if err == nil {
 		t.Error("Verify() should fail with a tampered signature")
 	}
+}
+
+func TestSigningJWT(t *testing.T) {
+	test_init()
+
+	keyname_base := "jwtkey"
+	keyType := "EC"
+	algorithm := azkeys.SignatureAlgorithmES512
+
+	keyname := fmt.Sprintf("%s-%s", keyname_base, uuid.New().String())
+
+	createParams := azkeys.CreateKeyParameters{
+		Kty: to.Ptr(azkeys.KeyType(keyType)), // "RSA" or "EC"
+		KeyAttributes: &azkeys.KeyAttributes{
+			//Exportable: to.Ptr(true),
+			Enabled: to.Ptr(true),
+		},
+		KeyOps: []*azkeys.KeyOperation{
+			to.Ptr(azkeys.KeyOperationSign),
+			to.Ptr(azkeys.KeyOperationVerify),
+		},
+	}
+
+	switch keyType {
+	case "RSA":
+		createParams.KeySize = to.Ptr(int32(2048)) // Key size in bits
+	case "EC":
+		switch algorithm {
+		case azkeys.SignatureAlgorithmES256:
+			createParams.Curve = to.Ptr(azkeys.CurveNameP256)
+		case azkeys.SignatureAlgorithmES384:
+			createParams.Curve = to.Ptr(azkeys.CurveNameP384)
+		case azkeys.SignatureAlgorithmES512:
+			createParams.Curve = to.Ptr(azkeys.CurveNameP521)
+		}
+	}
+
+	response, err := keysClient.CreateKey(context.Background(), keyname, createParams, nil)
+	if err != nil {
+		t.Fatalf("Failed to create key: %v", err)
+	}
+
+	defer func() {
+		_, err := keysClient.DeleteKey(context.Background(), keyname, nil)
+		if err != nil {
+			t.Fatalf("Failed to delete key: %v", err)
+		}
+	}()
+
+	//keyVersion := getKeyVersion(t, response.Key.KID.Name())
+	keyID := fmt.Sprintf("%s/keys/%s/%s", keyVaultURL, response.Key.KID.Name(), "")
+	key, err := NewKey(*keysClient, keyID)
+	if err != nil {
+		t.Fatalf("Failed to create key: %v", err)
+	}
+
+	m := SigningMethods[algorithm] //Ensure the method is registered
+	// Create and sign a JWT - JUST LIKE NORMAL!
+	token := jwt.NewWithClaims(m, jwt.MapClaims{
+		"iss": "your-issuer",
+		"sub": "user@example.com",
+		"aud": "your-audience",
+		"exp": time.Now().Add(time.Hour).Unix(),
+		"iat": time.Now().Unix(),
+	})
+
+	// Sign with Azure Key Vault - same API as always!
+	tokenString, err := token.SignedString(key)
+	if err != nil {
+		panic(err)
+	}
+
+	parsed, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Validate the algorithm
+		if _, ok := token.Method.(*SigningMethod); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		// Return the public key for verification
+		pub, err := key.PublicKey()
+		if err != nil {
+			return nil, err
+		}
+		return pub, nil
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	if claims, ok := parsed.Claims.(jwt.MapClaims); ok && parsed.Valid {
+		fmt.Println("Token is valid!")
+		fmt.Printf("Subject: %v\n", claims["sub"])
+	}
+
 }
 
 // func TestCertificate(t *testing.T) {
